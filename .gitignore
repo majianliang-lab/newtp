@@ -4,6 +4,7 @@ node_modules/
 .env
 .env.local
 .venv/
+.worktrees/
 dist/
 coverage/
 *.log
