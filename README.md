@@ -15,6 +15,8 @@
   [docs/superpowers/plans/2026-03-23-topology-management-platform.md](/Users/mr.ma/Documents/demo/docs/superpowers/plans/2026-03-23-topology-management-platform.md)
 - 当前状态与交接：
   [docs/architecture/2026-03-23-current-state-and-handoff.md](/Users/mr.ma/Documents/demo/docs/architecture/2026-03-23-current-state-and-handoff.md)
+- 会话中断恢复：
+  [docs/architecture/SESSION-RECOVERY.md](/Users/mr.ma/Documents/demo/docs/architecture/SESSION-RECOVERY.md)
 - 启动与演示手册：
   [docs/architecture/2026-03-24-demo-and-runbook.md](/Users/mr.ma/Documents/demo/docs/architecture/2026-03-24-demo-and-runbook.md)
 
