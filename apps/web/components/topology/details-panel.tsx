@@ -1,15 +1,29 @@
 import React from "react";
 
+type TopologyFlowEntry = {
+  id?: string;
+  label?: string;
+  protocol?: string;
+  port?: number;
+  risk?: string;
+  source_asset_label?: string;
+  destination_asset_label?: string;
+  metadata?: Record<string, unknown>;
+};
+
 type TopologyNode = {
   id: string;
   label: string;
   type: string;
   risk?: string;
+  metadata?: Record<string, unknown>;
   flow_type?: string;
   protocol?: string;
   port?: number;
   source_asset_label?: string;
   destination_asset_label?: string;
+  key_flows?: TopologyFlowEntry[];
+  key_flow_entries?: TopologyFlowEntry[];
 };
 
 type TopologyEdge = {
@@ -18,10 +32,15 @@ type TopologyEdge = {
   to: string;
   type: string;
   label: string;
+  source_asset_label?: string;
+  destination_asset_label?: string;
   flow_type?: string;
   protocol?: string;
   port?: number;
   risk?: string;
+  metadata?: Record<string, unknown>;
+  key_flows?: TopologyFlowEntry[];
+  key_flow_entries?: TopologyFlowEntry[];
 };
 
 export function DetailsPanel({
@@ -38,6 +57,13 @@ export function DetailsPanel({
   const selectedEdgeEventsLink = selectedEdge ? buildEdgeEventsLink(selectedEdge, nodeLabels) : undefined;
   const flowNodeEventsLink = selectedFlowNode ? buildFlowEventsLink(selectedFlowNode) : undefined;
   const assetEventsLink = !selectedEdge && !selectedFlowNode && node ? buildAssetEventsLink(node) : undefined;
+  const selectedMetadata = selectedEdge?.metadata ?? selectedFlowNode?.metadata ?? node?.metadata;
+  const selectedKeyFlows = extractKeyFlowEntries(selectedEdge ?? selectedFlowNode);
+  const selectedSourceLabel =
+    selectedEdge?.source_asset_label ?? (selectedEdge ? nodeLabels?.[selectedEdge.from] ?? selectedEdge.from : undefined);
+  const selectedDestinationLabel =
+    selectedEdge?.destination_asset_label ??
+    (selectedEdge ? nodeLabels?.[selectedEdge.to] ?? selectedEdge.to : undefined);
 
   return (
     <aside
@@ -54,9 +80,14 @@ export function DetailsPanel({
         <div style={{ display: "grid", gap: 10 }}>
           <div>
             <strong>名称：</strong>
-            {(nodeLabels?.[selectedEdge.from] ?? selectedEdge.from)} -&gt;{" "}
-            {(nodeLabels?.[selectedEdge.to] ?? selectedEdge.to)}
+            {selectedSourceLabel ?? "unknown"} -&gt; {selectedDestinationLabel ?? "unknown"}
           </div>
+          {selectedSourceLabel || selectedDestinationLabel ? (
+            <div>
+              <strong>链路端点：</strong>
+              {selectedSourceLabel ?? "unknown"} -&gt; {selectedDestinationLabel ?? "unknown"}
+            </div>
+          ) : null}
           <div>
             <strong>流向类型：</strong>
             {formatFlowType(selectedEdge.flow_type)}
@@ -73,6 +104,8 @@ export function DetailsPanel({
             <strong>风险：</strong>
             {selectedEdge.risk ?? "unknown"}
           </div>
+          {renderMetadata(selectedMetadata)}
+          {renderKeyFlows(selectedKeyFlows)}
           {selectedEdgeEventsLink ? (
             <a
               href={selectedEdgeEventsLink}
@@ -108,6 +141,8 @@ export function DetailsPanel({
             <strong>风险：</strong>
             {selectedFlowNode.risk ?? "unknown"}
           </div>
+          {renderMetadata(selectedMetadata)}
+          {renderKeyFlows(selectedKeyFlows)}
           {flowNodeEventsLink ? (
             <a
               href={flowNodeEventsLink}
@@ -131,6 +166,7 @@ export function DetailsPanel({
             <strong>风险：</strong>
             {node.risk ?? "unknown"}
           </div>
+          {renderMetadata(selectedMetadata)}
           {assetEventsLink ? (
             <a
               href={assetEventsLink}
@@ -181,7 +217,7 @@ function buildFlowEventsLink(node: TopologyNode) {
 }
 
 function buildEdgeEventsLink(edge: TopologyEdge, nodeLabels?: Record<string, string>) {
-  const destinationLabel = nodeLabels?.[edge.to];
+  const destinationLabel = edge.destination_asset_label ?? nodeLabels?.[edge.to];
 
   if (!destinationLabel) {
     return undefined;
@@ -191,4 +227,85 @@ function buildEdgeEventsLink(edge: TopologyEdge, nodeLabels?: Record<string, str
   return `/events?search=${encodeURIComponent(searchValue)}&targetLabel=${encodeURIComponent(
     destinationLabel
   )}&targetEdgeId=${encodeURIComponent(edge.id)}`;
+}
+
+function extractKeyFlowEntries(source?: TopologyNode | TopologyEdge) {
+  if (!source) {
+    return [];
+  }
+
+  return source.key_flows ?? source.key_flow_entries ?? [];
+}
+
+function renderMetadata(metadata?: Record<string, unknown>) {
+  const entries = metadata ? Object.entries(metadata).filter(([, value]) => value !== undefined && value !== null) : [];
+
+  if (!entries.length) {
+    return null;
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <strong>元数据：</strong>
+      <div style={{ display: "grid", gap: 6, paddingLeft: 4 }}>
+        {entries.map(([key, value]) => (
+          <div key={key}>
+            <strong>{formatMetadataKey(key)}：</strong>
+            {formatMetadataValue(value)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function renderKeyFlows(entries: TopologyFlowEntry[]) {
+  if (!entries.length) {
+    return null;
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <strong>关键流：</strong>
+      <div style={{ display: "grid", gap: 8, paddingLeft: 4 }}>
+        {entries.map((entry, index) => (
+          <div key={entry.id ?? `${entry.label ?? "key-flow"}-${index}`} style={{ display: "grid", gap: 2 }}>
+            <div>
+              <strong>{entry.label ?? "未命名关键流"}</strong>
+            </div>
+            <div style={{ color: "var(--muted)" }}>{describeFlowEntry(entry)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function describeFlowEntry(entry: TopologyFlowEntry) {
+  const sourceLabel = entry.source_asset_label ?? "unknown";
+  const destinationLabel = entry.destination_asset_label ?? "unknown";
+  const protocol = entry.protocol ?? "tcp";
+  const port = entry.port ?? 0;
+
+  return `${sourceLabel} → ${destinationLabel} · ${protocol}/${port}`;
+}
+
+function formatMetadataKey(value: string) {
+  return value.replace(/[_-]+/g, " ");
+}
+
+function formatMetadataValue(value: unknown): string {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(formatMetadataValue).join(", ");
+  }
+
+  if (value && typeof value === "object") {
+    return JSON.stringify(value);
+  }
+
+  return "unknown";
 }

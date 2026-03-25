@@ -9,11 +9,14 @@ type GraphNode = {
   type: string;
   label: string;
   risk?: string;
+  metadata?: Record<string, unknown>;
   flow_type?: string;
   protocol?: string;
   port?: number;
   source_asset_label?: string;
   destination_asset_label?: string;
+  key_flows?: KeyFlowEntry[];
+  key_flow_entries?: KeyFlowEntry[];
 };
 
 type GraphEdge = {
@@ -22,10 +25,25 @@ type GraphEdge = {
   to: string;
   type: string;
   label: string;
+  source_asset_label?: string;
+  destination_asset_label?: string;
   flow_type?: string;
   protocol?: string;
   port?: number;
   risk?: string;
+  metadata?: Record<string, unknown>;
+  key_flows?: KeyFlowEntry[];
+  key_flow_entries?: KeyFlowEntry[];
+};
+
+type KeyFlowEntry = {
+  id?: string;
+  label?: string;
+  protocol?: string;
+  port?: number;
+  source_asset_label?: string;
+  destination_asset_label?: string;
+  metadata?: Record<string, unknown>;
 };
 
 type Graph = {
@@ -79,7 +97,10 @@ export function TopologyCanvas({
         nodeLabels[edge.to] ?? edge.to,
         edge.protocol ?? "",
         edge.port ? String(edge.port) : "",
-        edge.flow_type ?? ""
+        edge.flow_type ?? "",
+        edge.source_asset_label ?? "",
+        edge.destination_asset_label ?? "",
+        extractKeyFlowSearchText(edge)
       ]
         .join(" ")
         .toLowerCase();
@@ -274,6 +295,8 @@ export function TopologyCanvas({
                       filteredEdges.map((edge) => {
                         const fromLabel = nodeLabels[edge.from] ?? edge.from;
                         const toLabel = nodeLabels[edge.to] ?? edge.to;
+                        const keyFlows = extractKeyFlowEntries(edge);
+                        const edgeLabel = edge.label ?? keyFlows[0]?.label ?? `${fromLabel} → ${toLabel}`;
                         const isSelected = selectedEdge?.id === edge.id;
                         const isPivotFlowHit =
                           focusTarget?.type === "asset" &&
@@ -297,9 +320,19 @@ export function TopologyCanvas({
                               cursor: "pointer",
                               textAlign: "left"
                             }}
-                          >
+                            >
                             <span>
                               {fromLabel} → {toLabel}
+                              {keyFlows.length ? (
+                                <span style={{ display: "block", marginTop: 4, color: "var(--muted)", fontSize: 12 }}>
+                                  {keyFlows.map((flow, index) => (
+                                    <span key={flow.id ?? `${edge.id}-${index}`}>
+                                      {index > 0 ? "，" : ""}
+                                      {formatKeyFlowSummary(flow)}
+                                    </span>
+                                  ))}
+                                </span>
+                              ) : null}
                             </span>
                             <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
                               {isPivotFlowHit ? (
@@ -316,7 +349,7 @@ export function TopologyCanvas({
                                   关联命中
                                 </span>
                               ) : null}
-                              <strong>{edge.label}</strong>
+                              <strong>{edgeLabel}</strong>
                             </span>
                           </button>
                         );
@@ -371,4 +404,28 @@ function findFocusTargetEdge(edges: GraphEdge[], focusTarget?: FocusTarget) {
   }
 
   return edges.find((edge) => edge.id === focusTarget.edgeId);
+}
+
+function extractKeyFlowEntries(source?: GraphEdge | GraphNode) {
+  if (!source) {
+    return [];
+  }
+
+  return source.key_flows ?? source.key_flow_entries ?? [];
+}
+
+function extractKeyFlowSearchText(edge: GraphEdge) {
+  return extractKeyFlowEntries(edge)
+    .map((entry) => [entry.label, entry.source_asset_label, entry.destination_asset_label, entry.protocol, entry.port]
+      .filter(Boolean)
+      .join(" "))
+    .join(" ");
+}
+
+function formatKeyFlowSummary(entry: KeyFlowEntry) {
+  const label = entry.label ?? "未命名关键流";
+  const sourceLabel = entry.source_asset_label ?? "unknown";
+  const destinationLabel = entry.destination_asset_label ?? "unknown";
+
+  return `${label} ${sourceLabel} → ${destinationLabel}`;
 }

@@ -296,6 +296,14 @@
   - 资产详情与流向详情当前都提供“查看相关事件”入口
   - 资产会按 `targetLabel` 精确回跳到相关事件
   - 流向会按 `protocol + port + destination asset` 组合查询词回跳到事件证据
+- 已新增拓扑详情的原始对象语义展示：
+  - 安全域详情当前会展示域类型、归属保护对象、保护对象等级、责任团队与域内资产数
+  - 资产详情当前会展示资产类型、所属安全域、保护对象与重要等级
+  - 资产/安全域详情不再只停留在“名称 + 风险”的演示态
+- 已新增 `flow view` 的关键流向条目：
+  - `flow view` 当前不再只有流向节点
+  - 已新增和流向节点对应的边级条目，可直接在关键流向列表中看到源/目的资产语义
+  - 关键流向条目当前可展示 API 返回的关键流描述，而不只是裸协议端口
 - 已新增回放 evidence 的后端定位引用：
   - `/api/simulation/replay/smb-445` 当前会直接返回 `impacted_asset_refs`
   - 白名单例外和误杀候选当前会直接返回 `target_asset_node_id / target_flow_node_id / target_edge_id`
@@ -731,6 +739,9 @@
   - 域级风险映射
   - 边级 `flow_type / protocol / port / risk`
   - `flow view` 节点级 `source_asset_label / destination_asset_label`
+  - 域节点级 `domain_type / protection_object_name / protection_object_level / owner_team / asset_count`
+  - 资产节点级 `asset_type / security_domain_name / protection_object_name / protection_object_level / value_level`
+  - `flow view` 边级 `source_label / destination_label / related_flow_node_id`
 - 已有拓扑接口：
   - `/api/topology/domain-view`
   - `/api/topology/asset-view`

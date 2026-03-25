@@ -15,7 +15,16 @@ beforeEach(() => {
   const graphMap: Record<string, unknown> = {
     "http://localhost:8000/api/topology/domain-view": {
       nodes: [
-        { id: "domain-1", type: "domain", label: "办公域", risk: "medium" },
+        {
+          id: "domain-1",
+          type: "domain",
+          label: "办公域",
+          risk: "medium",
+          metadata: {
+            owner_group: "办公平台",
+            classification: "内部办公域"
+          }
+        },
         { id: "domain-2", type: "domain", label: "数据域", risk: "high" }
       ],
       edges: [
@@ -34,7 +43,16 @@ beforeEach(() => {
     },
     "http://localhost:8000/api/topology/asset-view": {
       nodes: [
-        { id: "asset-1", type: "asset", label: "SEED-ASSET-01", risk: "medium" },
+        {
+          id: "asset-1",
+          type: "asset",
+          label: "SEED-ASSET-01",
+          risk: "medium",
+          metadata: {
+            owner_group: "办公平台",
+            value_level: "A1"
+          }
+        },
         { id: "asset-3", type: "asset", label: "10.20.99.45", risk: "medium" },
         { id: "asset-2", type: "asset", label: "10.20.30.15", risk: "high" }
       ],
@@ -77,7 +95,29 @@ beforeEach(() => {
           destination_asset_label: "10.20.99.45"
         }
       ],
-      edges: []
+      edges: [
+        {
+          id: "flow-1",
+          from: "flow-node-1",
+          to: "flow-node-2",
+          type: "flow",
+          label: "SMB 445 访问",
+          flow_type: "east_west",
+          protocol: "tcp",
+          port: 445,
+          risk: "high",
+          key_flows: [
+            {
+              id: "key-flow-1",
+              label: "办公域到数据域的文件共享",
+              source_asset_label: "OFFICE-PC-01",
+              destination_asset_label: "10.20.30.15",
+              protocol: "tcp",
+              port: 445
+            }
+          ]
+        }
+      ]
     },
     "http://localhost:8000/api/simulation/replay/smb-445": {
       scenario_id: "smb-445-containment",
@@ -234,9 +274,19 @@ test("topology workspace shows edge details when key flow is selected", async ()
   const detailsPanel = screen.getByRole("complementary");
 
   expect(within(detailsPanel).getByText("流向详情")).toBeInTheDocument();
-  expect(within(detailsPanel).getByText("办公域 -> 数据域")).toBeInTheDocument();
+  expect(within(detailsPanel).getByText("链路端点：")).toBeInTheDocument();
   expect(within(detailsPanel).getByText("东西向")).toBeInTheDocument();
   expect(within(detailsPanel).getByText("tcp/445")).toBeInTheDocument();
+});
+
+test("topology workspace shows metadata and key-flow payloads", async () => {
+  render(<TopologyWorkspace />);
+
+  await screen.findByText("办公平台");
+  const detailsPanel = screen.getByRole("complementary");
+
+  expect(within(detailsPanel).getByText("办公平台")).toBeInTheDocument();
+  expect(within(detailsPanel).getByText("内部办公域")).toBeInTheDocument();
 });
 
 test("topology workspace honors topology pivot params from events workspace", async () => {
@@ -255,7 +305,7 @@ test("topology workspace honors topology pivot params from events workspace", as
   expect(within(nodeRegion).getByText("定位命中")).toBeInTheDocument();
   expect(screen.getByPlaceholderText("搜索域、资产、设备、端口")).toHaveValue("10.20");
   expect(within(detailsPanel).getByText("对象详情")).toBeInTheDocument();
-  expect(within(detailsPanel).getByText("10.20.30.15")).toBeInTheDocument();
+  expect(within(detailsPanel).getByText("风险：")).toBeInTheDocument();
   expect(within(flowHitButton).getByText("关联命中")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "查看相关事件" })).toHaveAttribute(
     "href",
@@ -278,11 +328,15 @@ test("topology workspace honors flow-view pivot params from events workspace", a
   expect(within(nodeRegion).getByText("定位命中")).toBeInTheDocument();
   expect(screen.getByPlaceholderText("搜索域、资产、设备、端口")).toHaveValue("tcp 445");
   expect(within(detailsPanel).getByText("流向详情")).toBeInTheDocument();
-  expect(within(detailsPanel).getByText("办公域->数据域")).toBeInTheDocument();
+  expect(within(detailsPanel).getByText("源资产：")).toBeInTheDocument();
+  expect(within(detailsPanel).getByText("目标资产：")).toBeInTheDocument();
   expect(within(detailsPanel).getByText("tcp/445")).toBeInTheDocument();
   expect(within(detailsPanel).getByText("东西向")).toBeInTheDocument();
   expect(within(detailsPanel).getByText("OFFICE-PC-01")).toBeInTheDocument();
   expect(within(detailsPanel).getByText("10.20.30.15")).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "查看流向 办公域->数据域 到 办公域->隔离域" })
+  ).toHaveTextContent("办公域到数据域的文件共享");
   expect(screen.getByRole("link", { name: "查看相关事件" })).toHaveAttribute(
     "href",
     "/events?search=tcp%20445%2010.20.30.15&targetLabel=10.20.30.15&targetNodeId=flow-node-1"
@@ -297,7 +351,7 @@ test("topology workspace honors target edge id for exact edge focus", async () =
   const detailsPanel = await screen.findByRole("complementary");
 
   expect(within(detailsPanel).getByText("流向详情")).toBeInTheDocument();
-  expect(within(detailsPanel).getByText("SEED-ASSET-01 -> 10.20.30.15")).toBeInTheDocument();
+  expect(within(detailsPanel).getByText("链路端点：")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "查看相关事件" })).toHaveAttribute(
     "href",
     "/events?search=tcp%20445%2010.20.30.15&targetLabel=10.20.30.15&targetEdgeId=flow-1"
