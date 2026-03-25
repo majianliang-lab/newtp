@@ -48,6 +48,9 @@ beforeEach(() => {
                   { label: "10.20.30.15", target_node_id: "asset-2" },
                   { label: "10.20.99.45", target_node_id: "asset-3" }
                 ],
+                false_positive_reasons: [
+                  "对 10.20.30.15 的访问属于允许窗口内的文件共享，不应按异常处置。"
+                ],
                 whitelist_exception_hits: [
                   {
                     flow_id: "baseline-file-share-01",
@@ -57,7 +60,8 @@ beforeEach(() => {
                     port: 445,
                     target_asset_node_id: "asset-2",
                     target_flow_node_id: "flow-node-1",
-                    target_edge_id: "flow-1"
+                    target_edge_id: "flow-1",
+                    whitelist_reason: "文件共享白名单仍在生效，保留以避免办公到文件服务器误杀。"
                   }
                 ],
                 false_positive_candidates: [],
@@ -88,7 +92,8 @@ beforeEach(() => {
             approval_state: {
               status: "pending_approval",
               required_roles: ["SOC 值班主管", "网络安全平台主管"],
-              rationale: "当前动作涉及跨域批量阻断，需要先复核误杀候选与白名单例外。"
+              rationale: "当前动作涉及跨域批量阻断，需要先复核误杀候选与白名单例外。",
+              impact_summary: "审批通过后将影响 2 台边界设备策略命中。"
             },
             explanation_chain: [
               "已识别为全网 445 横向阻断意图。",
@@ -101,14 +106,16 @@ beforeEach(() => {
                 title: "复核白名单与误杀候选",
                 owner: "SOC 值班主管",
                 status: "in_review",
-                summary: "先确认 allow-office-to-file 等例外仍需保留。"
+                summary: "先确认 allow-office-to-file 等例外仍需保留。",
+                impact_summary: "若移除例外，办公文件共享会被同步阻断。"
               },
               {
                 step_id: "push-policy",
                 title: "下发阻断策略",
                 owner: "网络安全平台主管",
                 status: "ready",
-                summary: "审批通过后向边界设备批量下发 445 阻断策略。"
+                summary: "审批通过后向边界设备批量下发 445 阻断策略。",
+                impact_summary: "下发后边界阻断生效，预计覆盖 2 台设备。"
               }
             ],
             recommended_exceptions: [
@@ -144,7 +151,13 @@ test("orchestration workspace simulates an intent and renders recommendations", 
   expect(await screen.findByText("批量下发 445 黑名单阻断")).toBeInTheDocument();
   expect(screen.getByText("smb-445-containment")).toBeInTheDocument();
   expect(screen.getByText("阻断 / global / tcp/445")).toBeInTheDocument();
-  expect(screen.getByText("allow-office-to-file")).toBeInTheDocument();
+  expect(screen.getAllByText("allow-office-to-file")).toHaveLength(2);
+  expect(await screen.findByText("1. 对 10.20.30.15 的访问属于允许窗口内的文件共享，不应按异常处置。")).toBeInTheDocument();
+  expect(
+    await screen.findByText("文件共享白名单仍在生效，保留以避免办公到文件服务器误杀。")
+  ).toBeInTheDocument();
+  expect(await screen.findByText("审批通过后将影响 2 台边界设备策略命中。")).toBeInTheDocument();
+  expect(await screen.findByText("执行影响：若移除例外，办公文件共享会被同步阻断。")).toBeInTheDocument();
   expect(screen.getByText("fw-hq-core-01, fw-branch-01")).toBeInTheDocument();
   expect(screen.getByText("10.20.30.15, 10.20.99.45")).toBeInTheDocument();
   expect(screen.getByText("pending_approval")).toBeInTheDocument();

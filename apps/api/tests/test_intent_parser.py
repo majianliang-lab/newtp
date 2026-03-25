@@ -93,10 +93,23 @@ def test_orchestration_simulation_returns_replay_and_recommendations():
     assert body["recommended_exceptions"][0]["target_asset_node_id"] == f"asset-{asset_response.json()['id']}"
     assert body["recommended_exceptions"][0]["target_flow_node_id"] == f"flow-node-{flow_response.json()['id']}"
     assert body["recommended_exceptions"][0]["target_edge_id"] == f"flow-{flow_response.json()['id']}"
+    assert body["exception_reasons"][0]["policy_id"] == "allow-office-to-file"
+    assert "文件共享" in body["exception_reasons"][0]["reason"]
+    assert body["false_positive_assessment"]["candidate_count"] == 1
+    assert body["false_positive_assessment"]["recommended_disposition"] == "preserve_whitelist"
+    assert "误杀" in body["false_positive_assessment_summary"]
+    assert len(body["whitelist_preservation_reasons"]) == 1
+    assert body["whitelist_preservation_reasons"][0]["policy_id"] == "allow-office-to-file"
+    assert "文件共享" in body["whitelist_preservation_reasons"][0]["reason"]
     assert body["approval_state"]["status"] == "pending_approval"
     assert "SOC 值班主管" in body["approval_state"]["required_roles"]
+    assert body["approval_state"]["risk_level"] == "high"
+    assert "跨域批量阻断" in body["approval_state"]["impact_summary"]
+    assert body["approval_impact_summary"]
+    assert body["execution_impact_summary"]
     assert body["execution_plan"][0]["title"] == "复核白名单与误杀候选"
     assert body["execution_plan"][1]["status"] == "ready"
+    assert "误杀" in body["execution_plan"][0]["expected_outcome"]
 
 
 def test_orchestration_simulation_supports_host_isolation_intent():
@@ -127,5 +140,12 @@ def test_orchestration_simulation_supports_service_enable_intent():
     assert body["intent"]["scenario"] == "service-enable-change"
     assert body["recommended_actions"][0]["action_type"] == "service_allow"
     assert body["approval_state"]["status"] == "pending_approval"
+    assert body["approval_state"]["risk_level"] == "medium"
     assert body["execution_plan"][0]["title"] == "确认业务窗口与放通范围"
     assert len(body["explanation_chain"]) == 3
+    assert body["false_positive_assessment"]["candidate_count"] == 0
+    assert body["exception_reasons"] == []
+    assert "误杀" in body["false_positive_assessment_summary"]
+    assert body["whitelist_preservation_reasons"] == []
+    assert body["approval_impact_summary"]
+    assert body["execution_impact_summary"]

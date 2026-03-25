@@ -23,17 +23,19 @@ type OrchestrationResponse = {
       policy_change_count: number;
       security_event_count: number;
     };
-    evidence: {
-      impacted_assets: string[];
-      whitelist_exception_hits: Array<{
-        flow_id: string;
-        policy_id: string;
-        destination_ip: string;
-        source_ip: string;
-        port: number;
-      }>;
-      ai_summary: string;
-    };
+      evidence: {
+        impacted_assets: string[];
+        false_positive_reasons?: string[];
+        whitelist_exception_hits: Array<{
+          flow_id: string;
+          policy_id: string;
+          destination_ip: string;
+          source_ip: string;
+          port: number;
+          whitelist_reason?: string;
+        }>;
+        ai_summary: string;
+      };
   };
   recommended_actions: Array<{
     action_id: string;
@@ -58,6 +60,7 @@ type OrchestrationResponse = {
     status: string;
     required_roles: string[];
     rationale: string;
+    impact_summary?: string | string[];
   };
   explanation_chain: string[];
   execution_plan: Array<{
@@ -66,6 +69,7 @@ type OrchestrationResponse = {
     owner: string;
     status: string;
     summary: string;
+    impact_summary?: string | string[];
   }>;
 };
 
@@ -305,6 +309,7 @@ export function OrchestrationWorkspace() {
                     <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", marginTop: 12 }}>
                       <MetricCard label="允许流量" value={`${result.replay.stats.permit_count} 条`} />
                       <MetricCard label="阻断流量" value={`${result.replay.stats.deny_count} 条`} />
+                      <MetricCard label="误杀候选" value={`${result.replay.stats.false_positive_candidates} 条`} />
                       <MetricCard label="策略变更" value={`${result.replay.stats.policy_change_count} 次`} />
                       <MetricCard label="安全事件" value={`${result.replay.stats.security_event_count} 条`} />
                     </div>
@@ -314,6 +319,52 @@ export function OrchestrationWorkspace() {
                     <div style={{ marginTop: 6, fontWeight: 700 }}>
                       {result.replay.evidence.impacted_assets.join(", ")}
                     </div>
+                    {result.replay.evidence.false_positive_reasons?.length ? (
+                      <div
+                        style={{
+                          marginTop: 12,
+                          borderRadius: 14,
+                          padding: 14,
+                          background: "#fff",
+                          border: "1px solid rgba(244, 199, 191, 0.7)"
+                        }}
+                      >
+                        <div style={{ fontWeight: 800 }}>误杀评估</div>
+                        <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 13 }}>
+                          {result.replay.stats.false_positive_candidates} 个候选的解释
+                        </div>
+                        <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                          {result.replay.evidence.false_positive_reasons.map((item, index) => (
+                            <div key={`${index}-${item}`} style={{ color: "var(--muted)", fontSize: 13 }}>
+                              {index + 1}. {item}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {result.replay.evidence.whitelist_exception_hits.some((item) => item.whitelist_reason) ? (
+                      <div
+                        style={{
+                          marginTop: 12,
+                          borderRadius: 14,
+                          padding: 14,
+                          background: "#fff",
+                          border: "1px solid rgba(11, 99, 206, 0.18)"
+                        }}
+                      >
+                        <div style={{ fontWeight: 800 }}>白名单保留原因</div>
+                        <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                          {result.replay.evidence.whitelist_exception_hits.map((item) =>
+                            item.whitelist_reason ? (
+                              <div key={item.flow_id} style={{ color: "var(--muted)", fontSize: 13 }}>
+                                <strong style={{ color: "#0f172a" }}>{item.policy_id}</strong>
+                                <div style={{ marginTop: 4 }}>{item.whitelist_reason}</div>
+                              </div>
+                            ) : null
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div
@@ -362,6 +413,14 @@ export function OrchestrationWorkspace() {
                     <div style={{ marginTop: 8, color: "var(--muted)", fontSize: 13 }}>
                       {result.approval_state.rationale}
                     </div>
+                    {result.approval_state.impact_summary ? (
+                      <div style={{ marginTop: 10 }}>
+                        <div style={{ color: "var(--muted)", fontSize: 13 }}>审批影响</div>
+                        <div style={{ marginTop: 4, fontWeight: 700 }}>
+                          {renderTextBlock(result.approval_state.impact_summary)}
+                        </div>
+                      </div>
+                    ) : null}
                     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
                       <button
                         type="button"
@@ -452,6 +511,11 @@ export function OrchestrationWorkspace() {
                         </div>
                         <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 13 }}>负责人：{step.owner}</div>
                         <div style={{ marginTop: 6, color: "var(--muted)", fontSize: 13 }}>{step.summary}</div>
+                        {step.impact_summary ? (
+                          <div style={{ marginTop: 8, color: "var(--muted)", fontSize: 13 }}>
+                            执行影响：{renderTextBlock(step.impact_summary)}
+                          </div>
+                        ) : null}
                       </article>
                     ))}
                   </div>
@@ -547,6 +611,10 @@ function MetricCard({ label, value }: { label: string; value: string }) {
       <div style={{ marginTop: 6, fontWeight: 800 }}>{value}</div>
     </div>
   );
+}
+
+function renderTextBlock(value: string | string[]) {
+  return Array.isArray(value) ? value.join("；") : value;
 }
 
 function translateAction(action: string) {
