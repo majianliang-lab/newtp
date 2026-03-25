@@ -1,0 +1,22 @@
+[
+  {
+    "flow_id": "baseline-445-office-file",
+    "source_ip": "10.10.20.15",
+    "destination_ip": "10.20.30.15",
+    "protocol": "tcp",
+    "port": 445,
+    "flow_type": "east_west",
+    "direction": "business",
+    "packets_per_second": 120
+  },
+  {
+    "flow_id": "baseline-443-portal",
+    "source_ip": "172.16.1.20",
+    "destination_ip": "10.30.40.20",
+    "protocol": "tcp",
+    "port": 443,
+    "flow_type": "north_south",
+    "direction": "business",
+    "packets_per_second": 80
+  }
+]

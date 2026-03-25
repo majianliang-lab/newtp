@@ -1,0 +1,51 @@
+{
+  "pages": {
+    "/_not-found/page": [
+      "static/chunks/webpack-ca2371d8047ab959.js",
+      "static/chunks/87c73c54-24122e7b92478d00.js",
+      "static/chunks/18-90b700ea37b686a2.js",
+      "static/chunks/main-app-054be8928fba3779.js",
+      "static/chunks/app/_not-found/page-c8e8a90e42c984a3.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack-ca2371d8047ab959.js",
+      "static/chunks/87c73c54-24122e7b92478d00.js",
+      "static/chunks/18-90b700ea37b686a2.js",
+      "static/chunks/main-app-054be8928fba3779.js",
+      "static/css/504b0873d814c1d6.css",
+      "static/chunks/app/layout-bdbb760e298e78d2.js"
+    ],
+    "/(platform)/compliance/page": [
+      "static/chunks/webpack-ca2371d8047ab959.js",
+      "static/chunks/87c73c54-24122e7b92478d00.js",
+      "static/chunks/18-90b700ea37b686a2.js",
+      "static/chunks/main-app-054be8928fba3779.js",
+      "static/chunks/148-74f944faa3aed879.js",
+      "static/chunks/app/(platform)/compliance/page-40725ab545122122.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-ca2371d8047ab959.js",
+      "static/chunks/87c73c54-24122e7b92478d00.js",
+      "static/chunks/18-90b700ea37b686a2.js",
+      "static/chunks/main-app-054be8928fba3779.js",
+      "static/chunks/148-74f944faa3aed879.js",
+      "static/chunks/app/page-be855aa83760c567.js"
+    ],
+    "/(platform)/war-room/page": [
+      "static/chunks/webpack-ca2371d8047ab959.js",
+      "static/chunks/87c73c54-24122e7b92478d00.js",
+      "static/chunks/18-90b700ea37b686a2.js",
+      "static/chunks/main-app-054be8928fba3779.js",
+      "static/chunks/148-74f944faa3aed879.js",
+      "static/chunks/app/(platform)/war-room/page-6cf08c8a42577bdf.js"
+    ],
+    "/(platform)/topology/page": [
+      "static/chunks/webpack-ca2371d8047ab959.js",
+      "static/chunks/87c73c54-24122e7b92478d00.js",
+      "static/chunks/18-90b700ea37b686a2.js",
+      "static/chunks/main-app-054be8928fba3779.js",
+      "static/chunks/148-74f944faa3aed879.js",
+      "static/chunks/app/(platform)/topology/page-cf89867c4229b078.js"
+    ]
+  }
+}

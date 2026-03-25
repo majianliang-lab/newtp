@@ -1,0 +1,1 @@
+"""UDP syslog collector package."""

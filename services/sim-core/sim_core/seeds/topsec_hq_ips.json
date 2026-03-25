@@ -1,0 +1,40 @@
+{
+  "device_id": "ips-topsec-hq-01",
+  "device_name": "TOPSEC-HQ-IPS-01",
+  "vendor": "Topsec",
+  "device_type": "ips",
+  "os_type": "NGTOS",
+  "management_ip": "10.255.0.21",
+  "interfaces": [
+    {
+      "name": "monitor0",
+      "ip": "10.10.0.2/16",
+      "zone": "office_zone"
+    },
+    {
+      "name": "monitor1",
+      "ip": "10.20.0.2/16",
+      "zone": "server_zone"
+    }
+  ],
+  "zones": [
+    {
+      "name": "office_zone",
+      "type": "monitor"
+    },
+    {
+      "name": "server_zone",
+      "type": "monitor"
+    }
+  ],
+  "address_objects": [],
+  "service_objects": [],
+  "policies": [],
+  "routes": [],
+  "syslog": {
+    "server": "127.0.0.1",
+    "port": 514,
+    "protocol": "udp",
+    "enabled": true
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "device_id": "fw-topsec-branch-01",
+  "device_name": "TOPSEC-BRANCH-FW-01",
+  "vendor": "Topsec",
+  "device_type": "ngfw",
+  "os_type": "NGTOS",
+  "management_ip": "10.255.0.11",
+  "interfaces": [
+    {
+      "name": "ge0/0",
+      "ip": "10.10.0.1/16",
+      "zone": "office_zone"
+    },
+    {
+      "name": "ge0/1",
+      "ip": "10.20.0.1/16",
+      "zone": "server_zone"
+    }
+  ],
+  "zones": [
+    {
+      "name": "office_zone",
+      "type": "trust"
+    },
+    {
+      "name": "server_zone",
+      "type": "dmz"
+    }
+  ],
+  "address_objects": [
+    {
+      "name": "FILE-SRV01",
+      "type": "host",
+      "value": "10.20.30.15"
+    }
+  ],
+  "service_objects": [
+    {
+      "name": "tcp_445",
+      "protocol": "tcp",
+      "destination_port": "445"
+    }
+  ],
+  "policies": [
+    {
+      "policy_id": "allow-office-to-file",
+      "source_zone": "office_zone",
+      "destination_zone": "server_zone",
+      "source_address": [
+        "any"
+      ],
+      "destination_address": [
+        "FILE-SRV01"
+      ],
+      "services": [
+        "tcp_445"
+      ],
+      "action": "permit",
+      "log_enabled": true
+    }
+  ],
+  "routes": [
+    {
+      "destination": "0.0.0.0/0",
+      "next_hop": "172.16.10.254",
+      "outbound_interface": "ge0/0",
+      "admin_distance": 10
+    }
+  ],
+  "syslog": {
+    "server": "127.0.0.1",
+    "port": 514,
+    "protocol": "udp",
+    "enabled": true
+  }
+}

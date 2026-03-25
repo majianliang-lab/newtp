@@ -1,0 +1,7 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/(platform)/compliance/page": "/compliance",
+  "/page": "/",
+  "/(platform)/war-room/page": "/war-room",
+  "/(platform)/topology/page": "/topology"
+}

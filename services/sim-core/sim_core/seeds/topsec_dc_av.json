@@ -1,0 +1,31 @@
+{
+  "device_id": "av-topsec-dc-01",
+  "device_name": "TOPSEC-DC-AV-01",
+  "vendor": "Topsec",
+  "device_type": "av",
+  "os_type": "NGTOS",
+  "management_ip": "10.255.0.31",
+  "interfaces": [
+    {
+      "name": "mgmt0",
+      "ip": "10.20.30.2/24",
+      "zone": "server_zone"
+    }
+  ],
+  "zones": [
+    {
+      "name": "server_zone",
+      "type": "host-protect"
+    }
+  ],
+  "address_objects": [],
+  "service_objects": [],
+  "policies": [],
+  "routes": [],
+  "syslog": {
+    "server": "127.0.0.1",
+    "port": 514,
+    "protocol": "udp",
+    "enabled": true
+  }
+}

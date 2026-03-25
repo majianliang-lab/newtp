@@ -1,0 +1,10 @@
+[project]
+name = "syslog-collector"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[project.scripts]
+syslog-collector = "syslog_collector.__main__:main"
+
+[tool.pytest.ini_options]
+testpaths = ["syslog_collector/tests"]

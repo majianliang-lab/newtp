@@ -1,0 +1,7 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/(platform)/compliance/page": "app/(platform)/compliance/page.js",
+  "/page": "app/page.js",
+  "/(platform)/war-room/page": "app/(platform)/war-room/page.js",
+  "/(platform)/topology/page": "app/(platform)/topology/page.js"
+}
